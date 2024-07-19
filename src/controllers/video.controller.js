@@ -10,11 +10,6 @@ const getAllVideos = asyncHandler(async (req, res) => {
   const { page = 1, limit = 2, query, sortBy, sortType } = req.query;
   //TODO: get all videos based on query, sort, pagination
 
-  //   if (!isValidObjectId(userId)) {
-  //     throw new ApiError(400, "User not Exist");
-  //   }
-  // owner: new mongoose.Types.ObjectId(userId)
-
   const videos = await Video.aggregate([
     {
       $match: {
