@@ -51,7 +51,7 @@ const registerUser = asyncHandler(async (req, res) => {
   if (existedUser) {
     throw new ApiError(409, "User with email or username already exists");
   }
-  //console.log(req.files);
+  // console.log(req.files);
 
   const avatarLocalPath = req.files?.avatar[0]?.path;
   //const coverImageLocalPath = req.files?.coverImage[0]?.path;
@@ -132,7 +132,7 @@ const loginUser = asyncHandler(async (req, res) => {
   if (!isPasswordValid) {
     throw new ApiError(401, "Invalid user credentials");
   }
-  console.log(user._id);
+  // console.log(user._id);
   const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(
     user._id
   );
@@ -144,6 +144,7 @@ const loginUser = asyncHandler(async (req, res) => {
   const options = {
     httpOnly: true,
     secure: true,
+    sameSite: "None",
   };
 
   return res
@@ -179,6 +180,7 @@ const logoutUser = asyncHandler(async (req, res) => {
   const options = {
     httpOnly: true,
     secure: true,
+    sameSite: "None",
   };
 
   return res
@@ -215,6 +217,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     const options = {
       httpOnly: true,
       secure: true,
+      sameSite: "None",
     };
 
     const { accessToken, newRefreshToken } =
@@ -468,37 +471,41 @@ const getWatchHistory = asyncHandler(async (req, res) => {
     );
 });
 
+const addToWatchHistory = asyncHandler(async (req, res) => {
+  const { videoId } = req.params;
 
-const addToWatchHistory = asyncHandler(async (req, res)=>{
- 
-  const {videoId} = req.params
+  if (!videoId) {
+    throw new ApiError(400, "Didn't got the videoId");
+  }
 
-  if(!videoId){
-    throw new ApiError(400, "Didn't got the videoId")
-}
-
-const watchHistory = await User.findByIdAndUpdate(new mongoose.Types.ObjectId(req.user._id),
-{
-    $push: {
-       watchHistory: new mongoose.Types.ObjectId(videoId)
+  const watchHistory = await User.findByIdAndUpdate(
+    new mongoose.Types.ObjectId(req.user._id),
+    {
+      $push: {
+        watchHistory: new mongoose.Types.ObjectId(videoId),
+      },
+    },
+    {
+      new: true,
     }
-},
-{
-    new: true
-})
+  );
 
-// console.log(watchHistory);
+  // console.log(watchHistory);
 
-if(!watchHistory){
-  throw new ApiError(400, "Error in adding video to Watch History")
-}
+  if (!watchHistory) {
+    throw new ApiError(400, "Error in adding video to Watch History");
+  }
 
-return res
-.status(200)
-.json(new ApiResponse(200, watchHistory, "Successfully added video to watchHistory"))
-})
-
-
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        watchHistory,
+        "Successfully added video to watchHistory"
+      )
+    );
+});
 
 export {
   registerUser,
@@ -512,5 +519,5 @@ export {
   updateUserCoverImage,
   getUserChannelProfile,
   getWatchHistory,
-  addToWatchHistory
+  addToWatchHistory,
 };
