@@ -54,7 +54,7 @@ const addComment = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Video Id required");
   }
 
-  if (!content.trim()) {
+  if (!content) {
     throw new ApiError(400, "Please add a comment");
   }
 
@@ -77,7 +77,7 @@ const updateComment = asyncHandler(async (req, res) => {
   if (!isValidObjectId(commentId)) {
     throw new ApiError(400, "please select a proper comment before edit");
   }
-  if (!content.trim()) {
+  if (!content) {
     throw new ApiError(400, "Please add a new comment");
   }
   const comment = await Comment.findById(commentId);

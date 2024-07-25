@@ -82,6 +82,8 @@ const publishAVideo = asyncHandler(async (req, res) => {
     throw new ApiError(500, "title and description field is required");
   }
 
+  // console.log(req.files)
+
   if (!req.files || !req.files.videoFile || !req.files.thumbnail) {
     throw new ApiError(500, "Video file and Thumbnail are required");
   }
