@@ -443,6 +443,7 @@ const getWatchHistory = asyncHandler(async (req, res) => {
                     fullName: 1,
                     username: 1,
                     avatar: 1,
+                    email: 1,
                   },
                 },
               ],
@@ -456,6 +457,11 @@ const getWatchHistory = asyncHandler(async (req, res) => {
             },
           },
         ],
+      },
+    },
+    {
+      $addFields: {
+        watchHistory: { $reverseArray: "$watchHistory" },
       },
     },
   ]);
@@ -481,16 +487,15 @@ const addToWatchHistory = asyncHandler(async (req, res) => {
   const watchHistory = await User.findByIdAndUpdate(
     new mongoose.Types.ObjectId(req.user._id),
     {
-      $push: {
+      $addToSet: {
         watchHistory: new mongoose.Types.ObjectId(videoId),
       },
     },
     {
       new: true,
+      select: "-password -refreshToken -accessToken",
     }
   );
-
-  // console.log(watchHistory);
 
   if (!watchHistory) {
     throw new ApiError(400, "Error in adding video to Watch History");

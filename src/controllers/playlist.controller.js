@@ -113,6 +113,40 @@ const getPlaylistById = asyncHandler(async (req, res) => {
         localField: "videos",
         foreignField: "_id",
         as: "videoDetails",
+        pipeline: [
+          {
+            $lookup: {
+              from: "users",
+              localField: "owner",
+              foreignField: "_id",
+              as: "ownerDetails",
+            },
+          },
+          {
+            $unwind: "$ownerDetails",
+          },
+          {
+            $project: {
+              _id: 1,
+              title: 1,
+              description: 1,
+              videoFile: 1,
+              thumbnail: 1,
+              duration: 1,
+              views: 1,
+              isPublished: 1,
+              createdAt: 1,
+              updatedAt: 1,
+              owner: {
+                _id: "$ownerDetails._id",
+                fullName: "$ownerDetails.fullName",
+                avatar: "$ownerDetails.avatar",
+                email: "$ownerDetails.email",
+                username: "$ownerDetails.username",
+              },
+            },
+          },
+        ],
       },
     },
     {
