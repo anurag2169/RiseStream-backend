@@ -26,11 +26,53 @@ const getVideoComments = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Video Not Found!");
   }
 
+  // const aggregatedComment = await Comment.aggregate([
+  //   {
+  //     $match: {
+  //       video: new mongoose.Types.ObjectId(videoId),
+  //     },
+  //   },
+  // ]);
+
   const aggregatedComment = await Comment.aggregate([
     {
       $match: {
         video: new mongoose.Types.ObjectId(videoId),
       },
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "owner",
+        foreignField: "_id",
+        as: "ownerDetails",
+      },
+    },
+    {
+      $unwind: "$ownerDetails",
+    },
+    {
+      $project: {
+        _id: 1,
+        content: 1,
+        video: 1,
+        owner: {
+          _id: "$ownerDetails._id",
+          fullName: "$ownerDetails.fullName",
+          avatar: "$ownerDetails.avatar",
+          email: "$ownerDetails.email",
+          username: "$ownerDetails.username",
+        },
+        createdAt: 1,
+        updatedAt: 1,
+        __v: 1,
+      },
+    },
+    {
+      $skip: skip,
+    },
+    {
+      $limit: limitInt,
     },
   ]);
 

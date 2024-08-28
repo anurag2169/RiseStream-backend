@@ -2,9 +2,14 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import apicache from "apicache";
+import statusMonitor from "express-status-monitor";
 
 const app = express();
 let cache = apicache.middleware;
+
+const status = statusMonitor(); // Initialize the monitor
+
+app.use(status);
 
 app.use(
   cors({

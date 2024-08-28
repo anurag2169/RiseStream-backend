@@ -39,12 +39,37 @@ const getUserPlaylists = asyncHandler(async (req, res) => {
       },
     },
     {
+      $lookup: {
+        from: "users",
+        localField: "owner",
+        foreignField: "_id",
+        as: "ownerDetails",
+      },
+    },
+    {
+      $unwind: "$ownerDetails",
+    },
+    {
+      $lookup: {
+        from: "videos",
+        localField: "videos",
+        foreignField: "_id",
+        as: "videoDetails",
+      },
+    },
+    {
       $project: {
         _id: 1,
         name: 1,
         description: 1,
-        videos: 1,
-        owner: 1,
+        videos: "$videoDetails",
+        owner: {
+          _id: "$ownerDetails._id",
+          fullName: "$ownerDetails.fullName",
+          avatar: "$ownerDetails.avatar",
+          email: "$ownerDetails.email",
+          username: "$ownerDetails.username",
+        },
         createdAt: 1,
         updatedAt: 1,
       },
@@ -64,7 +89,54 @@ const getPlaylistById = asyncHandler(async (req, res) => {
     throw new ApiError(400, "please give valid playlist Id");
   }
 
-  const playList = await Playlist.findById(playlistId);
+  // const playList = await Playlist.findById(playlistId);
+  const playList = await Playlist.aggregate([
+    {
+      $match: {
+        _id: new mongoose.Types.ObjectId(playlistId),
+      },
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "owner",
+        foreignField: "_id",
+        as: "ownerDetails",
+      },
+    },
+    {
+      $unwind: "$ownerDetails",
+    },
+    {
+      $lookup: {
+        from: "videos",
+        localField: "videos",
+        foreignField: "_id",
+        as: "videoDetails",
+      },
+    },
+    {
+      $project: {
+        _id: 1,
+        name: 1,
+        description: 1,
+        videos: "$videoDetails",
+        owner: {
+          _id: "$ownerDetails._id",
+          fullName: "$ownerDetails.fullName",
+          avatar: "$ownerDetails.avatar",
+          email: "$ownerDetails.email",
+          username: "$ownerDetails.username",
+        },
+        createdAt: 1,
+        updatedAt: 1,
+      },
+    },
+  ]);
+
+  if (!playList || playList.length === 0) {
+    throw new ApiError(404, "Playlist not found");
+  }
 
   return res
     .status(201)
