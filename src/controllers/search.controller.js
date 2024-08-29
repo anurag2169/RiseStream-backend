@@ -7,32 +7,57 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { Playlist } from "../models/playlist.model.js";
 
 const search = asyncHandler(async (req, res) => {
-  const { query } = req.query;
+  const { query = "" } = req.query;
+
+  const trimmedQuery = query.trim();
+
+  // Split the trimmed query into individual words
+  const searchWords = trimmedQuery.split(" ").filter(Boolean);
+
+  // Build regex array for each word
+  const regexArray = searchWords.map((word) => new RegExp(word, "i"));
 
   if (!query) {
     return res
       .status(400)
       .json(new ApiResponse(400, null, "Query parameter is required"));
   }
-
-  // Build regular expression for partial matching
-  const regex = new RegExp(query, "i");
-
-  const users = query
-    ? await User.find({
-        $or: [{ fullName: regex }, { email: regex }, { username: regex }],
-      })
+    
+  const users = trimmedQuery
+    ? await User.find(
+        {
+          $or: [
+            { fullName: { $in: regexArray } },
+            { email: { $in: regexArray } },
+            { username: { $in: regexArray } },
+          ],
+        },
+        {
+          password: 0,
+          accessToken: 0,
+          refreshToken: 0,
+          watchHistory: 0,
+          coverImage: 0,
+          updatedAt: 0,
+        }
+      )
     : [];
 
-  const videos = query
+  const videos = trimmedQuery
     ? await Video.find({
-        $or: [{ title: regex }, { description: regex }],
+        $or: [
+          { title: { $in: regexArray } },
+          { description: { $in: regexArray } },
+        ],
       })
     : [];
 
-  const playlists = query
+  const playlists = trimmedQuery
     ? await Playlist.find({
-        $or: [{ name: regex }, { description: regex }],
+        $or: [
+          { name: { $in: regexArray } },
+          { description: { $in: regexArray } },
+        ],
       })
     : [];
 

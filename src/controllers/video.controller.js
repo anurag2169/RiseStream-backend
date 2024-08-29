@@ -197,7 +197,7 @@ const getVideoById = asyncHandler(async (req, res) => {
       },
     },
     {
-      $unwind: "$owner", // This will convert the array into an object
+      $unwind: "$owner", 
     },
   ]);
 
