@@ -1,7 +1,7 @@
 {
-  "name": "chai-backend",
+  "name": "rise-stream-backend",
   "version": "1.0.0",
-  "description": "a backend at chai aur code channel - youtube",
+  "description": "Rise Stream is a video Hosting platform inspired by YouTube. It provides users with a seamless and engaging experience for watching and sharing videos across various genres.",
   "type": "module",
   "main": "index.js",
   "scripts": {
@@ -12,7 +12,7 @@
     "backend",
     "chai"
   ],
-  "author": "Hitesh Choudhary",
+  "author": "Anurag Dubey",
   "license": "ISC",
   "devDependencies": {
     "nodemon": "^3.0.1",
@@ -21,6 +21,7 @@
   "dependencies": {
     "apicache": "^1.6.3",
     "bcrypt": "^5.1.1",
+    "chai-backend": "file:",
     "cloudinary": "^1.41.0",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
