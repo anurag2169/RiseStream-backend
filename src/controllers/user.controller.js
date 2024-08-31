@@ -425,43 +425,72 @@ const getWatchHistory = asyncHandler(async (req, res) => {
       },
     },
     {
+      $unwind: "$watchHistory",
+    },
+    {
       $lookup: {
         from: "videos",
-        localField: "watchHistory",
+        localField: "watchHistory.videoId",
         foreignField: "_id",
-        as: "watchHistory",
-        pipeline: [
-          {
-            $lookup: {
-              from: "users",
-              localField: "owner",
-              foreignField: "_id",
-              as: "owner",
-              pipeline: [
-                {
-                  $project: {
-                    fullName: 1,
-                    username: 1,
-                    avatar: 1,
-                    email: 1,
-                  },
-                },
-              ],
-            },
-          },
-          {
-            $addFields: {
-              owner: {
-                $first: "$owner",
-              },
-            },
-          },
-        ],
+        as: "videoDetails",
       },
     },
     {
-      $addFields: {
-        watchHistory: { $reverseArray: "$watchHistory" },
+      $unwind: "$videoDetails",
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "videoDetails.owner",
+        foreignField: "_id",
+        as: "ownerDetails",
+      },
+    },
+    {
+      $unwind: "$ownerDetails",
+    },
+    {
+      $project: {
+        "videoDetails._id": 1,
+        "videoDetails.title": 1,
+        "videoDetails.thumbnail": 1,
+        "videoDetails.description": 1,
+        "videoDetails.views": 1,
+        "videoDetails.duration": 1,
+        "ownerDetails._id": 1,
+        "ownerDetails.fullName": 1,
+        "ownerDetails.username": 1,
+        "ownerDetails.avatar": 1,
+        "ownerDetails.email": 1,
+        "watchHistory.videoAddedAt": 1,
+      },
+    },
+    {
+      $sort: { "watchHistory.videoAddedAt": -1 },
+    },
+    {
+      $group: {
+        _id: "$_id",
+        watchHistory: {
+          $push: {
+            videoDetails: {
+              _id: "$videoDetails._id",
+              title: "$videoDetails.title",
+              thumbnail: "$videoDetails.thumbnail",
+              description: "$videoDetails.description",
+              views: "$videoDetails.views",
+              duration: "$videoDetails.duration",
+              owner: {
+                _id: "$ownerDetails._id",
+                fullName: "$ownerDetails.fullName",
+                username: "$ownerDetails.username",
+                avatar: "$ownerDetails.avatar",
+                email: "$ownerDetails.email",
+              },
+            },
+            videoAddedAt: "$watchHistory.videoAddedAt",
+          },
+        },
       },
     },
   ]);
@@ -484,11 +513,26 @@ const addToWatchHistory = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Didn't got the videoId");
   }
 
+  const currentTime = new Date();
+  // First, pull the videoId from the watchHistory array if it exists
+  await User.findByIdAndUpdate(new mongoose.Types.ObjectId(req.user._id), {
+    $pull: { watchHistory: { videoId: new mongoose.Types.ObjectId(videoId) } },
+  });
+
+  // Then, push the videoId to the top of the watchHistory array
   const watchHistory = await User.findByIdAndUpdate(
     new mongoose.Types.ObjectId(req.user._id),
     {
-      $addToSet: {
-        watchHistory: new mongoose.Types.ObjectId(videoId),
+      $push: {
+        watchHistory: {
+          $each: [
+            {
+              videoId: new mongoose.Types.ObjectId(videoId),
+              videoAddedAt: currentTime,
+            },
+          ],
+          $position: 0,
+        },
       },
     },
     {
@@ -496,11 +540,9 @@ const addToWatchHistory = asyncHandler(async (req, res) => {
       select: "-password -refreshToken -accessToken",
     }
   );
-
   if (!watchHistory) {
     throw new ApiError(400, "Error in adding video to Watch History");
   }
-
   return res
     .status(200)
     .json(
