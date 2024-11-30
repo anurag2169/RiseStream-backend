@@ -21,7 +21,9 @@ app.use(
 );
 
 app.use(express.json({ limit: "1gb" }));
-app.use(express.urlencoded({ extended: true, limit: "1gb" }));
+app.use(
+  express.urlencoded({ extended: true, parameterLimit: 50000, limit: "1gb" })
+);
 app.use(express.static("public"));
 app.use(cookieParser());
 
