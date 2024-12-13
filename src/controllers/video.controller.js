@@ -48,6 +48,11 @@ const getAllVideos = asyncHandler(async (req, res) => {
         updatedAt: 1,
       },
     },
+    {
+      $sort: {
+        createdAt: -1,
+      },
+    },
   ]);
 
   return res
@@ -197,7 +202,7 @@ const getVideoById = asyncHandler(async (req, res) => {
       },
     },
     {
-      $unwind: "$owner", 
+      $unwind: "$owner",
     },
   ]);
 
