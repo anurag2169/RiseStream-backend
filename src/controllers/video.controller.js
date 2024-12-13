@@ -205,10 +205,10 @@ const getVideoById = asyncHandler(async (req, res) => {
       $unwind: "$owner",
     },
   ]);
-
+  const videoObject = video[0] || null;
   return res
     .status(200)
-    .json(new ApiResponse(200, video, "video get successfully"));
+    .json(new ApiResponse(200, videoObject, "video get successfully"));
 });
 
 const updateVideo = asyncHandler(async (req, res) => {
